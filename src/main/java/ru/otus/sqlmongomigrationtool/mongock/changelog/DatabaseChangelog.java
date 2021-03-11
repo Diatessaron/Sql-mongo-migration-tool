@@ -2,12 +2,11 @@ package ru.otus.sqlmongomigrationtool.mongock.changelog;
 
 import com.github.cloudyrock.mongock.ChangeLog;
 import com.github.cloudyrock.mongock.ChangeSet;
+import com.github.cloudyrock.mongock.driver.mongodb.springdata.v3.decorator.impl.MongockTemplate;
 import com.mongodb.client.MongoDatabase;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import ru.otus.sqlmongomigrationtool.domain.Author;
-import ru.otus.sqlmongomigrationtool.domain.Book;
-import ru.otus.sqlmongomigrationtool.domain.Comment;
-import ru.otus.sqlmongomigrationtool.domain.Genre;
+import ru.otus.sqlmongomigrationtool.domain.mongo.MongoAuthor;
+import ru.otus.sqlmongomigrationtool.domain.mongo.MongoBook;
+import ru.otus.sqlmongomigrationtool.domain.mongo.MongoGenre;
 
 @ChangeLog
 public class DatabaseChangelog {
@@ -17,23 +16,26 @@ public class DatabaseChangelog {
     }
 
     @ChangeSet(order = "002", id = "insertAuthor", runAlways = true, author = "Diatessaron")
-    public void insertAuthor(MongoTemplate template) {
-        template.save(new Author("James Joyce"), "authors");
+    public void insertAuthor(MongockTemplate template) {
+        template.save(new MongoAuthor("James Joyce"), "authors");
+        template.save(new MongoAuthor("Pushkin"), "authors");
+        template.save(new MongoAuthor("Lermontov"), "authors");
     }
 
     @ChangeSet(order = "003", id = "insertGenre", runAlways = true, author = "Diatessaron")
-    public void insertGenre(MongoTemplate template) {
-        template.save(new Genre("Modernist novel"), "genres");
+    public void insertGenre(MongockTemplate template) {
+        template.save(new MongoGenre("Modernist Novel"), "genres");
+        template.save(new MongoGenre("Classical Novel"), "genres");
+        template.save(new MongoGenre("Classical Poem"), "genres");
     }
 
     @ChangeSet(order = "004", id = "insertBook", runAlways = true, author = "Diatessaron")
-    public void insertBook(MongoTemplate template) {
-        template.save(new Book("Ulysses", new Author("James Joyce"),
-                new Genre("Modernist novel")), "books");
-    }
-
-    @ChangeSet(order = "005", id = "insertComment", runAlways = true, author = "Diatessaron")
-    public void insertComment(MongoTemplate template) {
-        template.save(new Comment("Published in 1922", "Ulysses"), "comments");
+    public void insertBook(MongockTemplate template) {
+        template.save(new MongoBook("Ulysses", new MongoAuthor("James Joyce"),
+                new MongoGenre("Modernist Novel")), "books");
+        template.save(new MongoBook("The Captain's Daughter", new MongoAuthor("Pushking"),
+                new MongoGenre("Classical Novel")), "books");
+        template.save(new MongoBook("Demon", new MongoAuthor("Lermontov"),
+                new MongoGenre("Classical Poem")), "books");
     }
 }

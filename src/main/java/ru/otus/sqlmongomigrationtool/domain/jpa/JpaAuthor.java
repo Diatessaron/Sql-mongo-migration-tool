@@ -1,19 +1,25 @@
-package ru.otus.sqlmongomigrationtool.domain;
+package ru.otus.sqlmongomigrationtool.domain.jpa;
 
+import javax.persistence.*;
 import java.util.Objects;
 
-public class Author {
+@Entity
+@Table(name = "authors")
+public class JpaAuthor {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+    @Column(name = "name")
     private String name;
 
-    public Author() {
+    public JpaAuthor() {
     }
 
-    public Author(String name) {
+    public JpaAuthor(String name) {
         this.name = name;
     }
 
-    public Author(long id, String name) {
+    public JpaAuthor(long id, String name) {
         this.id = id;
         this.name = name;
     }
@@ -38,7 +44,7 @@ public class Author {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Author author = (Author) o;
+        JpaAuthor author = (JpaAuthor) o;
         return name.equals(author.name);
     }
 
