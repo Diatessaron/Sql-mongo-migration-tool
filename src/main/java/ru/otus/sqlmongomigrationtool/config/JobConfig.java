@@ -25,7 +25,6 @@ import ru.otus.sqlmongomigrationtool.domain.mongo.MongoGenre;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import java.util.HashMap;
-import java.util.List;
 
 @Configuration
 public class JobConfig {
@@ -42,7 +41,6 @@ public class JobConfig {
         this.entityManager = entityManager;
     }
 
-    @StepScope
     @Bean
     public MongoItemReader<MongoBook> bookReader(MongoTemplate mongoTemplate) {
         return new MongoItemReaderBuilder<MongoBook>()
@@ -54,14 +52,12 @@ public class JobConfig {
                 .build();
     }
 
-    @StepScope
     @Bean
     public ItemProcessor<MongoBook, JpaBook> bookProcessor() {
         return book -> new JpaBook(book.getTitle(), getAuthor(book.getAuthor().getName()),
                 getGenre(book.getGenre().getName()));
     }
 
-    @StepScope
     @Bean
     public JpaItemWriter<JpaBook> bookWriter() {
         return new JpaItemWriterBuilder<JpaBook>()
@@ -81,7 +77,6 @@ public class JobConfig {
                 .build();
     }
 
-    @StepScope
     @Bean
     public MongoItemReader<MongoAuthor> authorReader(MongoTemplate mongoTemplate) {
         return new MongoItemReaderBuilder<MongoAuthor>()
@@ -93,13 +88,11 @@ public class JobConfig {
                 .build();
     }
 
-    @StepScope
     @Bean
     public ItemProcessor<MongoAuthor, JpaAuthor> authorProcessor() {
         return author -> new JpaAuthor(author.getName());
     }
 
-    @StepScope
     @Bean
     public JpaItemWriter<JpaAuthor> authorWriter() {
         return new JpaItemWriterBuilder<JpaAuthor>()
@@ -119,7 +112,6 @@ public class JobConfig {
                 .build();
     }
 
-    @StepScope
     @Bean
     public MongoItemReader<MongoGenre> genreReader(MongoTemplate mongoTemplate) {
         return new MongoItemReaderBuilder<MongoGenre>()
@@ -131,13 +123,11 @@ public class JobConfig {
                 .build();
     }
 
-    @StepScope
     @Bean
     public ItemProcessor<MongoGenre, JpaGenre> genreProcessor() {
         return genre -> new JpaGenre(genre.getName());
     }
 
-    @StepScope
     @Bean
     public JpaItemWriter<JpaGenre> genreWriter() {
         return new JpaItemWriterBuilder<JpaGenre>()
