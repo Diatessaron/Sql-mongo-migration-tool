@@ -33,9 +33,13 @@ public class DatabaseChangelog {
     public void insertBook(MongockTemplate template) {
         template.save(new MongoBook("Ulysses", new MongoAuthor("James Joyce"),
                 new MongoGenre("Modernist Novel")), "books");
-        template.save(new MongoBook("The Captain's Daughter", new MongoAuthor("Pushking"),
+        template.save(new MongoBook("The Captain's Daughter", new MongoAuthor("Pushkin"),
                 new MongoGenre("Classical Novel")), "books");
         template.save(new MongoBook("Demon", new MongoAuthor("Lermontov"),
                 new MongoGenre("Classical Poem")), "books");
+        template.save(new MongoBook("Finnegans Wake", new MongoAuthor("James Joyce"),
+                new MongoGenre("Modernist Novel")), "books");
+        template.save(new MongoBook("Dubliners", new MongoAuthor("James Joyce"),
+                new MongoGenre("Modernist Novel")), "books");
     }
 }

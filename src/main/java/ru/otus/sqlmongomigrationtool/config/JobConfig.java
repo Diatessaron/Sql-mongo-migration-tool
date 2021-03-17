@@ -18,31 +18,35 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import ru.otus.sqlmongomigrationtool.domain.jpa.JpaAuthor;
 import ru.otus.sqlmongomigrationtool.domain.jpa.JpaBook;
 import ru.otus.sqlmongomigrationtool.domain.jpa.JpaGenre;
+import ru.otus.sqlmongomigrationtool.domain.mongo.MongoAuthor;
 import ru.otus.sqlmongomigrationtool.domain.mongo.MongoBook;
+import ru.otus.sqlmongomigrationtool.domain.mongo.MongoGenre;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import java.util.HashMap;
+import java.util.List;
 
 @Configuration
 public class JobConfig {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
-    private final EntityManagerFactory entityManagerFactory;
+    private final EntityManager entityManager;
 
     private static final int CHUNK_SIZE = 5;
 
     public JobConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory,
-                     EntityManagerFactory entityManagerFactory) {
+                     EntityManager entityManager) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
-        this.entityManagerFactory = entityManagerFactory;
+        this.entityManager = entityManager;
     }
 
     @StepScope
     @Bean
-    public MongoItemReader<MongoBook> reader(MongoTemplate mongoTemplate) {
+    public MongoItemReader<MongoBook> bookReader(MongoTemplate mongoTemplate) {
         return new MongoItemReaderBuilder<MongoBook>()
-                .name("mongoItemReader")
+                .name("mongoBookItemReader")
                 .template(mongoTemplate)
                 .jsonQuery("{}")
                 .targetType(MongoBook.class)
@@ -52,37 +56,130 @@ public class JobConfig {
 
     @StepScope
     @Bean
-    public ItemProcessor<MongoBook, JpaBook> processor() {
-        return book -> new JpaBook(book.getTitle(), new JpaAuthor(book.getAuthor().getName()),
-                new JpaGenre(book.getGenre().getName()));
+    public ItemProcessor<MongoBook, JpaBook> bookProcessor() {
+        return book -> new JpaBook(book.getTitle(), getAuthor(book.getAuthor().getName()),
+                getGenre(book.getGenre().getName()));
     }
 
     @StepScope
     @Bean
-    public JpaItemWriter<JpaBook> writer() {
+    public JpaItemWriter<JpaBook> bookWriter() {
         return new JpaItemWriterBuilder<JpaBook>()
-                .entityManagerFactory(entityManagerFactory)
+                .entityManagerFactory(entityManager.getEntityManagerFactory())
                 .build();
     }
 
     @Bean
-    public Job importUserJob(Step libraryMigrationStep) {
+    public Step bookMigrationStep(JpaItemWriter<JpaBook> bookWriter,
+                                  ItemReader<MongoBook> bookReader,
+                                  ItemProcessor<MongoBook, JpaBook> bookProcessor) {
+        return stepBuilderFactory.get("bookMigrationStep")
+                .<MongoBook, JpaBook>chunk(CHUNK_SIZE)
+                .reader(bookReader)
+                .processor(bookProcessor)
+                .writer(bookWriter)
+                .build();
+    }
+
+    @StepScope
+    @Bean
+    public MongoItemReader<MongoAuthor> authorReader(MongoTemplate mongoTemplate) {
+        return new MongoItemReaderBuilder<MongoAuthor>()
+                .name("mongoAuthorItemReader")
+                .template(mongoTemplate)
+                .jsonQuery("{}")
+                .targetType(MongoAuthor.class)
+                .sorts(new HashMap<>())
+                .build();
+    }
+
+    @StepScope
+    @Bean
+    public ItemProcessor<MongoAuthor, JpaAuthor> authorProcessor() {
+        return author -> new JpaAuthor(author.getName());
+    }
+
+    @StepScope
+    @Bean
+    public JpaItemWriter<JpaAuthor> authorWriter() {
+        return new JpaItemWriterBuilder<JpaAuthor>()
+                .entityManagerFactory(entityManager.getEntityManagerFactory())
+                .build();
+    }
+
+    @Bean
+    public Step authorMigrationStep(JpaItemWriter<JpaAuthor> authorWriter,
+                                    ItemReader<MongoAuthor> authorReader,
+                                    ItemProcessor<MongoAuthor, JpaAuthor> authorProcessor) {
+        return stepBuilderFactory.get("authorMigrationStep")
+                .<MongoAuthor, JpaAuthor>chunk(CHUNK_SIZE)
+                .reader(authorReader)
+                .processor(authorProcessor)
+                .writer(authorWriter)
+                .build();
+    }
+
+    @StepScope
+    @Bean
+    public MongoItemReader<MongoGenre> genreReader(MongoTemplate mongoTemplate) {
+        return new MongoItemReaderBuilder<MongoGenre>()
+                .name("mongoGenreItemReader")
+                .template(mongoTemplate)
+                .jsonQuery("{}")
+                .targetType(MongoGenre.class)
+                .sorts(new HashMap<>())
+                .build();
+    }
+
+    @StepScope
+    @Bean
+    public ItemProcessor<MongoGenre, JpaGenre> genreProcessor() {
+        return genre -> new JpaGenre(genre.getName());
+    }
+
+    @StepScope
+    @Bean
+    public JpaItemWriter<JpaGenre> genreWriter() {
+        return new JpaItemWriterBuilder<JpaGenre>()
+                .entityManagerFactory(entityManager.getEntityManagerFactory())
+                .build();
+    }
+
+    @Bean
+    public Step genreMigrationStep(JpaItemWriter<JpaGenre> genreWriter,
+                                   ItemReader<MongoGenre> genreReader,
+                                   ItemProcessor<MongoGenre, JpaGenre> genreProcessor) {
+        return stepBuilderFactory.get("genreMigrationStep")
+                .<MongoGenre, JpaGenre>chunk(CHUNK_SIZE)
+                .reader(genreReader)
+                .processor(genreProcessor)
+                .writer(genreWriter)
+                .build();
+    }
+
+    @Bean
+    public Job importUserJob(Step bookMigrationStep, Step authorMigrationStep, Step genreMigrationStep) {
         return jobBuilderFactory.get("importUserJob")
                 .incrementer(new RunIdIncrementer())
-                .flow(libraryMigrationStep)
-                .end()
+                .start(authorMigrationStep)
+                .next(genreMigrationStep)
+                .next(bookMigrationStep)
                 .build();
     }
 
-    @Bean
-    public Step libraryMigrationStep(JpaItemWriter<JpaBook> writer,
-                                     ItemReader<MongoBook> reader,
-                                     ItemProcessor<MongoBook, JpaBook> itemProcessor) {
-        return stepBuilderFactory.get("libraryMigrationStep")
-                .<MongoBook, JpaBook>chunk(CHUNK_SIZE)
-                .reader(reader)
-                .processor(itemProcessor)
-                .writer(writer)
-                .build();
+    private JpaAuthor getAuthor(String name) {
+        final TypedQuery<JpaAuthor> query = entityManager.createQuery
+                ("select a from JpaAuthor a where a.name = :name", JpaAuthor.class);
+        query.setParameter("name", name);
+
+        return query.getSingleResult();
+    }
+
+    private JpaGenre getGenre(String name) {
+        final TypedQuery<JpaGenre> query = entityManager.createQuery
+                ("select g from JpaGenre g where g.name = :name", JpaGenre.class);
+        query.setParameter("name", name);
+
+        return query.getSingleResult();
     }
 }
