@@ -21,4 +21,4 @@ spring:
 mongock:
   runner-type: InitializingBean
   change-logs-scan-package:
-    - ru.otus.sqlmongomigrationtool.mongock.changelog.DatabaseChangelog.java
+    - ru.otus.sqlmongomigrationtool.mongock.changelog

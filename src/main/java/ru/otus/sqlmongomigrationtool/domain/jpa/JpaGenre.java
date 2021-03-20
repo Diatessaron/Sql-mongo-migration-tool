@@ -1,19 +1,25 @@
-package ru.otus.sqlmongomigrationtool.domain;
+package ru.otus.sqlmongomigrationtool.domain.jpa;
 
+import javax.persistence.*;
 import java.util.Objects;
 
-public class Genre {
-    private String id;
+@Entity
+@Table(name = "genres")
+public class JpaGenre {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+    @Column(name = "name")
     private String name;
 
-    public Genre() {
+    public JpaGenre() {
     }
 
-    public Genre(String name) {
+    public JpaGenre(String name) {
         this.name = name;
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 
@@ -21,7 +27,7 @@ public class Genre {
         return name;
     }
 
-    public void setId(String id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -33,7 +39,7 @@ public class Genre {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Genre genre = (Genre) o;
+        JpaGenre genre = (JpaGenre) o;
         return name.equals(genre.name);
     }
 

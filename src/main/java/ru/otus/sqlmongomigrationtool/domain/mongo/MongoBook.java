@@ -1,17 +1,22 @@
-package ru.otus.sqlmongomigrationtool.domain;
+package ru.otus.sqlmongomigrationtool.domain.mongo;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Objects;
 
-public class Book {
+@Document(collection = "books")
+public class MongoBook {
+    @Id
     private String id;
     private String title;
-    private Author author;
-    private Genre genre;
+    private MongoAuthor author;
+    private MongoGenre genre;
 
-    public Book() {
+    public MongoBook() {
     }
 
-    public Book(String title, Author author, Genre genre) {
+    public MongoBook(String title, MongoAuthor author, MongoGenre genre) {
         this.title = title;
         this.author = author;
         this.genre = genre;
@@ -25,11 +30,11 @@ public class Book {
         return title;
     }
 
-    public Author getAuthor() {
+    public MongoAuthor getAuthor() {
         return author;
     }
 
-    public Genre getGenre() {
+    public MongoGenre getGenre() {
         return genre;
     }
 
@@ -41,11 +46,11 @@ public class Book {
         this.title = title;
     }
 
-    public void setAuthor(Author author) {
+    public void setAuthor(MongoAuthor author) {
         this.author = author;
     }
 
-    public void setGenre(Genre genre) {
+    public void setGenre(MongoGenre genre) {
         this.genre = genre;
     }
 
@@ -53,7 +58,7 @@ public class Book {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Book book = (Book) o;
+        MongoBook book = (MongoBook) o;
         return title.equals(book.title) && Objects.equals(author, book.author) &&
                 Objects.equals(genre, book.genre);
     }

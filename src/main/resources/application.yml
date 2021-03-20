@@ -11,6 +11,11 @@ spring:
     driverClassName: org.h2.Driver
     username: sa
     password:
+    schema: 'classpath:sql/schema.sql'
+
+  jpa:
+    hibernate:
+      ddl-auto: none
 
   h2:
     console:
@@ -26,4 +31,4 @@ spring:
 mongock:
   runner-type: InitializingBean
   change-logs-scan-package:
-    - ru.otus.sqlmongomigrationtool.mongock.changelog.DatabaseChangelog.java
+    - ru.otus.sqlmongomigrationtool.mongock.changelog
