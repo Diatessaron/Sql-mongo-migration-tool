@@ -4,7 +4,6 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
@@ -21,9 +20,9 @@ import ru.otus.sqlmongomigrationtool.domain.jpa.JpaGenre;
 import ru.otus.sqlmongomigrationtool.domain.mongo.MongoAuthor;
 import ru.otus.sqlmongomigrationtool.domain.mongo.MongoBook;
 import ru.otus.sqlmongomigrationtool.domain.mongo.MongoGenre;
+import ru.otus.sqlmongomigrationtool.services.BookService;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import java.util.HashMap;
 
 @Configuration
@@ -31,14 +30,16 @@ public class JobConfig {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
     private final EntityManager entityManager;
+    private final BookService bookService;
 
     private static final int CHUNK_SIZE = 5;
 
     public JobConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory,
-                     EntityManager entityManager) {
+                     EntityManager entityManager, BookService bookService) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
         this.entityManager = entityManager;
+        this.bookService = bookService;
     }
 
     @Bean
@@ -54,8 +55,7 @@ public class JobConfig {
 
     @Bean
     public ItemProcessor<MongoBook, JpaBook> bookProcessor() {
-        return book -> new JpaBook(book.getTitle(), getAuthor(book.getAuthor().getName()),
-                getGenre(book.getGenre().getName()));
+        return bookService::processBook;
     }
 
     @Bean
@@ -155,21 +155,5 @@ public class JobConfig {
                 .next(genreMigrationStep)
                 .next(bookMigrationStep)
                 .build();
-    }
-
-    private JpaAuthor getAuthor(String name) {
-        final TypedQuery<JpaAuthor> query = entityManager.createQuery
-                ("select a from JpaAuthor a where a.name = :name", JpaAuthor.class);
-        query.setParameter("name", name);
-
-        return query.getSingleResult();
-    }
-
-    private JpaGenre getGenre(String name) {
-        final TypedQuery<JpaGenre> query = entityManager.createQuery
-                ("select g from JpaGenre g where g.name = :name", JpaGenre.class);
-        query.setParameter("name", name);
-
-        return query.getSingleResult();
     }
 }
